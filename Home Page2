@@ -1,0 +1,201 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="homepag2.aspx.cs" Inherits="WebApplication1_MAL.homepag2" %>
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server">
+
+
+
+        <!-- Navbar -->
+        <nav class="navbar navbar-expand-lg navbar-dark bg-dark">
+            <div class="container-fluid">
+                <!-- Brand -->
+                <a class="navbar-brand d-flex align-items-center" href="Default.aspx">
+                    <img src="/Images/matlogo.png" alt="Brand" width="30" height="30" class="d-inline-block align-text-top me-2" />
+                </a>
+
+                <!-- Toggler for mobile -->
+                <button class="navbar-toggler" type="button" data-bs-toggle="collapse" data-bs-target="#navbarNavDropdown" 
+                    aria-controls="navbarNavDropdown" aria-expanded="false" aria-label="Toggle navigation">
+                    <span class="navbar-toggler-icon"></span>
+                </button>
+
+                <!-- Navbar items -->
+                <div class="collapse navbar-collapse" id="navbarNavDropdown">
+                    <ul class="navbar-nav me-auto mb-2 mb-lg-0">
+                        <!-- Home -->
+                        <li class="nav-item">
+                            <a class="nav-link active" aria-current="page" href="Homepage1.aspx">
+                                Home
+                            </a>
+                        </li>
+                        <!-- Meeting -->
+                        <li class="nav-item">
+                            <a class="nav-link" href="MeetingsList.aspx">
+                                Meeting List
+                            </a>
+                        </li>
+                    </ul>
+
+                    <!-- User dropdown -->
+                    <ul class="navbar-nav">
+                        <li class="nav-item dropdown">
+                            <a class="nav-link dropdown-toggle d-flex align-items-center" href="#" id="userDropdown" role="button" 
+                                data-bs-toggle="dropdown" aria-expanded="false">
+                                <i class="bi bi-person-fill me-1"></i><%-- User--%>
+                            </a>
+                            <ul class="dropdown-menu dropdown-menu-end" aria-labelledby="userDropdown">
+                                <li><a class="dropdown-item" href="Profile.aspx">Profile</a></li>
+                                <li><a class="dropdown-item" href="Settings.aspx">Settings</a></li>
+                                <li><hr class="dropdown-divider"></li>
+                                <li><a class="dropdown-item" href="Logout.aspx">Logout</a></li>
+                            </ul>
+                        </li>
+                    </ul>
+                </div>
+            </div>
+        </nav>
+
+
+
+
+        <div class="container mt-4">
+            <div class="row g-3">
+
+                <!-- Total Meetings -->
+                <div class="col-md-3">
+                    <div class="card text-white bg-primary shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Total Meetings</h5>
+                            <asp:Label ID="lblTotalMeetings" runat="server" CssClass="display-6"></asp:Label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Upcoming Meetings -->
+                <div class="col-md-3">
+                    <div class="card text-white bg-success shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Upcoming</h5>
+                            <asp:Label ID="lblUpcomingMeetings" runat="server" CssClass="display-6"></asp:Label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Missed Meetings -->
+                <div class="col-md-3">
+                    <div class="card text-white bg-danger shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">Missed</h5>
+                            <asp:Label ID="lblMissedMeetings" runat="server" CssClass="display-6"></asp:Label>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- History -->
+                <div class="col-md-3">
+                    <div class="card text-white bg-secondary shadow">
+                        <div class="card-body text-center">
+                            <h5 class="card-title">History</h5>
+                            <asp:Label ID="lblHistoryMeetings" runat="server" CssClass="display-6"></asp:Label>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </form>
+</body>
+</html>
+
+
+----
+
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace WebApplication1_MAL
+{
+    public partial class homepag2 : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                LoadMeetingCounts();
+            }
+        }
+
+        private void LoadMeetingCounts()
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                using (SqlCommand cmd = new SqlCommand("GetMeetingCounts", con))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+                    con.Open();
+
+                    SqlDataReader dr = cmd.ExecuteReader();
+                    if (dr.Read())
+                    {
+                        lblTotalMeetings.Text = dr["TotalMeetings"].ToString();
+                        lblUpcomingMeetings.Text = dr["UpcomingMeetings"].ToString();
+                        lblMissedMeetings.Text = dr["MissedMeetings"].ToString();
+                        lblHistoryMeetings.Text = dr["HistoryMeetings"].ToString();
+                    }
+                }
+            }
+        }
+    }
+}
+
+
+----
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[GetMeetingCounts]    Script Date: 8/28/2025 4:12:41 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetMeetingCounts]
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    SELECT 
+        -- Total number of meetings
+        (SELECT COUNT(*) FROM tbl_Meetings) AS TotalMeetings,
+
+        -- Meetings scheduled in the future
+        (SELECT COUNT(*) FROM tbl_Meetings 
+         WHERE [StartDate] > GETDATE()) AS UpcomingMeetings,
+
+        -- Meetings scheduled in the past but not attended/missed
+        (SELECT COUNT(*) FROM tbl_Meetings 
+         WHERE [StartDate] < GETDATE()
+           AND Status = 'Missed') AS MissedMeetings,
+
+        -- Meetings already completed (History)
+        (SELECT COUNT(*) FROM tbl_Meetings 
+         WHERE [StartDate] < GETDATE()
+           AND Status = 'Completed') AS HistoryMeetings;
+END
+
+
+
