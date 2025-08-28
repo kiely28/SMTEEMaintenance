@@ -1,0 +1,194 @@
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[DeleteMeeting]    Script Date: 8/28/2025 4:21:49 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[DeleteMeeting]
+    @MeetingId NVARCHAR(50)
+AS
+BEGIN
+    DELETE FROM Tbl_Meetings WHERE MeetingId = @MeetingId;
+END
+
+---
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[EndMeeting]    Script Date: 8/28/2025 4:22:08 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+
+ALTER PROCEDURE [dbo].[EndMeeting]
+    @meetingid NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    UPDATE tbl_meetings
+    SET status = 'Completed'
+    WHERE meetingid = @meetingid;
+
+    SELECT 'Meeting has been marked as Completed.' AS Message;
+END
+
+---
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[GetUserMeetings]    Script Date: 8/28/2025 4:22:48 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[GetUserMeetings]
+    @CreatedBy NVARCHAR(100)
+AS
+BEGIN
+    --SELECT MeetingId, Title, StartDate, EndDate, Venue, Organizer
+    --FROM Tbl_Meetings
+    --WHERE CreatedBy = @CreatedBy 
+    --  AND CAST(StartDate AS DATE) >= CAST(GETDATE() AS DATE)
+    --ORDER BY StartDate;
+
+	--SELECT * FROM [Tbl_Meetings]
+	--WHERE CreatedBy = @CreatedBy 
+	--AND CAST(GETDATE() AS DATE) BETWEEN startdate AND enddate
+	--OR startdate > CAST(GETDATE() AS DATE)
+	--ORDER BY StartDate;
+
+	SELECT *
+	FROM [Tbl_Meetings]
+	WHERE CreatedBy = @CreatedBy 
+	  AND (
+		(CAST(GETDATE() AS DATE) BETWEEN StartDate AND EndDate)
+		OR (StartDate > CAST(GETDATE() AS DATE))
+	  )
+	  AND Status IN ('Upcoming', 'In Progress')
+	ORDER BY StartDate;
+END
+
+---
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[TapAttendance]    Script Date: 8/28/2025 4:23:07 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[TapAttendance]
+    @meetingid NVARCHAR(50),
+    @cardserialno NVARCHAR(50)
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    -- Check if record already exists
+    IF EXISTS (SELECT 1 FROM tbl_participants WHERE meetingid=@meetingid AND cardserialno=@cardserialno)
+    BEGIN
+        -- If TimeOut is still NULL, set it
+        IF EXISTS (SELECT 1 FROM tbl_participants 
+                   WHERE meetingid=@meetingid AND cardserialno=@cardserialno AND timein IS NOT NULL AND timeout IS NULL)
+        BEGIN
+            UPDATE tbl_participants
+            SET timeout = GETDATE()
+            WHERE meetingid=@meetingid AND cardserialno=@cardserialno;
+
+            SELECT 'TimeOut recorded successfully!' AS Message;
+        END
+        ELSE
+        BEGIN
+            SELECT 'Attendance already completed.' AS Message;
+        END
+    END
+    ELSE
+    BEGIN
+        -- First Tap -> Insert as TimeIn
+        INSERT INTO tbl_participants (meetingid, cardserialno, timein)
+		VALUES (@meetingid, @cardserialno, FORMAT(GETDATE(), 'MM/dd/yyyy hh:mm:ss tt'));
+        --VALUES (@meetingid, @cardserialno, GETDATE()); --(GETDATE(), 'MM/dd/yyyy hh:mm:ss tt')
+
+        SELECT 'TimeIn recorded successfully!' AS Message;
+    END
+END
+
+
+---
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[TapAttendance1]    Script Date: 8/28/2025 4:23:22 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[TapAttendance1]
+    @meetingid NVARCHAR(50),
+    @cardserialno NVARCHAR(50),
+    @tapType NVARCHAR(10)  -- 'IN' or 'OUT'
+AS
+BEGIN
+    SET NOCOUNT ON;
+
+    IF @tapType = 'IN'
+    BEGIN
+        -- Only insert TimeIn if not exists
+        IF NOT EXISTS (SELECT 1 FROM tbl_participants WHERE meetingid=@meetingid AND cardserialno=@cardserialno)
+        BEGIN
+            INSERT INTO tbl_participants (meetingid, cardserialno, timein)
+            VALUES (@meetingid, @cardserialno, GETDATE());
+
+            SELECT 'Time In recorded successfully!' AS Message;
+        END
+        ELSE
+        BEGIN
+            SELECT 'This card already tapped in.' AS Message;
+        END
+    END
+    ELSE IF @tapType = 'OUT'
+    BEGIN
+        -- Update TimeOut if TimeIn exists and Timeout still NULL
+        IF EXISTS (SELECT 1 FROM tbl_participants 
+                   WHERE meetingid=@meetingid AND cardserialno=@cardserialno AND timein IS NOT NULL AND timeout IS NULL)
+        BEGIN
+            UPDATE tbl_participants
+            SET timeout = GETDATE()
+            WHERE meetingid=@meetingid AND cardserialno=@cardserialno;
+
+            SELECT 'Time Out recorded successfully!' AS Message;
+        END
+        ELSE
+        BEGIN
+            SELECT 'Cannot record Time Out (no Time In or already Time Out).' AS Message;
+        END
+    END
+END
+
+---
+
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[UpdateMeetingStatus]    Script Date: 8/28/2025 4:23:38 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[UpdateMeetingStatus]
+    @MeetingID NVARCHAR(50)
+AS
+BEGIN
+    --UPDATE Tbl_Meetings
+    --SET Status = 'In Progress'
+    --WHERE MeetingID = @MeetingID;
+	
+	-- Only update if status is not already 'Upcoming'
+    UPDATE Tbl_Meetings
+    SET Status = 'In Progress'
+    WHERE MeetingID = @MeetingID AND Status <> 'In Progress';
+
+END
