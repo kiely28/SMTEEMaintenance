@@ -131,3 +131,42 @@ namespace WebApplication1_MAL
         }
     }
 }
+
+---
+
+USE [db_MeetingAttendance]
+GO
+/****** Object:  StoredProcedure [dbo].[InsertMeeting1]    Script Date: 8/28/2025 4:10:03 PM ******/
+SET ANSI_NULLS ON
+GO
+SET QUOTED_IDENTIFIER ON
+GO
+ALTER PROCEDURE [dbo].[InsertMeeting1]
+    @Title NVARCHAR(200),
+    @StartDate DATETIME,
+    @EndDate DATETIME,
+    @Venue NVARCHAR(100),
+    @Organizer NVARCHAR(100),
+    --@Remarks NVARCHAR(50),
+	@CreatedBy NVARCHAR(100),
+    @MeetingId NVARCHAR(50) OUTPUT
+AS
+BEGIN
+    DECLARE @Prefix NVARCHAR(20) = 'MTG-' + FORMAT(GETDATE(), 'yyyyMM') + '-'
+
+    DECLARE @LastSeq INT = (
+        SELECT ISNULL(MAX(CAST(RIGHT(MeetingId, 3) AS INT)), 0)
+        FROM Tbl_Meetings
+        WHERE MeetingId LIKE @Prefix + '%'
+    )
+
+    DECLARE @NextSeq INT = @LastSeq + 1
+
+    SET @MeetingId = @Prefix + RIGHT('000' + CAST(@NextSeq AS VARCHAR), 3)
+
+    --INSERT INTO Tbl_Meetings (MeetingId, Title, StartDate, EndDate, Venue, Organizer, CreatedBy)
+    --VALUES (@MeetingId, @Title, @StartDate, @EndDate, @Venue, @Organizer, @CreatedBy)
+	
+    INSERT INTO Tbl_Meetings (MeetingId, Title, StartDate, EndDate, Venue, Organizer, CreatedBy, Status)
+    VALUES (@MeetingId, @Title, @StartDate, @EndDate, @Venue, @Organizer, @CreatedBy, 'Upcoming')
+END
