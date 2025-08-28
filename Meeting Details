@@ -1,0 +1,111 @@
+using System;
+using System.Collections.Generic;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+
+namespace WebApplication1_MAL
+{
+    public partial class MeetingDetails : System.Web.UI.Page
+    {
+        protected string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                lblMeetingID.Text = Request.QueryString["meetingId"];
+                lblTitle.Text = Request.QueryString["title"];
+                LoadAttendance();
+            }
+        }
+
+        protected void txtEmployeeID_TextChanged(object sender, EventArgs e)
+        {
+            string meetingId = lblMeetingID.Text;
+            string employeeId = txtEmployeeID.Text;
+
+            if (!string.IsNullOrWhiteSpace(employeeId))
+            {
+                using (SqlConnection conn = new SqlConnection(connStr))
+                {
+                    string sql = "INSERT INTO MeetingAttendance (MeetingCode, EmployeeID, Timestamp) VALUES (@MeetingCode, @EmployeeID, GETDATE())";
+                    using (SqlCommand cmd = new SqlCommand(sql, conn))
+                    {
+                        cmd.Parameters.AddWithValue("@MeetingCode", meetingId);
+                        cmd.Parameters.AddWithValue("@EmployeeID", employeeId);
+
+                        conn.Open();
+                        cmd.ExecuteNonQuery();
+                    }
+                }
+
+                txtEmployeeID.Text = "";
+                LoadAttendance();
+            }
+        }
+
+        private void LoadAttendance()
+        {
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                string sql = "SELECT EmployeeID, Timestamp FROM MeetingAttendance WHERE MeetingCode = @MeetingCode ORDER BY Timestamp DESC";
+                using (SqlCommand cmd = new SqlCommand(sql, conn))
+                {
+                    cmd.Parameters.AddWithValue("@MeetingCode", lblMeetingID.Text);
+                    conn.Open();
+
+                    using (SqlDataReader reader = cmd.ExecuteReader())
+                    {
+                        DataTable dt = new DataTable();
+                        dt.Load(reader);
+                        gvAttendance.DataSource = dt;
+                        gvAttendance.DataBind();
+                    }
+                }
+            }
+        }
+        protected void gvMeetings_RowCommand(object sender, GridViewCommandEventArgs e)
+        {
+            string meetingId = e.CommandArgument.ToString();
+
+            if (e.CommandName == "Start")
+            {
+                // Redirect to Tapping Page (e.g., Attendance logging)
+                Response.Redirect($"StartMeeting.aspx?meetingId={meetingId}");
+            }
+            else if (e.CommandName == "EditMeeting")
+            {
+                // Redirect to Edit page (you must create this)
+                Response.Redirect($"EditMeeting.aspx?meetingId={meetingId}");
+            }
+            else if (e.CommandName == "DeleteMeeting")
+            {
+                DeleteMeeting(meetingId);
+                //LoadMeetings(); // refresh grid
+                LoadAttendance();
+            }
+        }
+
+
+        private void DeleteMeeting(string meetingId)
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["MyConn"].ConnectionString;
+
+            using (SqlConnection conn = new SqlConnection(connStr))
+            using (SqlCommand cmd = new SqlCommand("DeleteMeeting", conn))
+            {
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@MeetingId", meetingId);
+
+                conn.Open();
+                cmd.ExecuteNonQuery();
+            }
+        }
+
+    }
+}
