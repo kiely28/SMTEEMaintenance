@@ -1,0 +1,418 @@
+<%@ Page Language="C#" AutoEventWireup="true" CodeBehind="meetingattendance.aspx.cs" Inherits="WebApplication1_MAL.meetingattendance" %>
+
+<%--<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Attendance</title>
+    <link href="-https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server" class="container mt-5">
+        <div class="card shadow p-4">
+            <h3 class="mb-3">Meeting Attendance Tapping</h3>
+
+            <!-- Hidden Meeting ID -->
+            <asp:HiddenField ID="hfMeetingID" runat="server" />
+
+            <div class="mb-3">
+                <label class="form-label">Card Serial Number</label>
+                <asp:TextBox ID="txtCardSerial" runat="server" CssClass="form-control" placeholder="Tap/Enter Card Serial No"></asp:TextBox>
+            </div>
+
+            <asp:Button ID="btnTap" runat="server" Text="Submit Tap" CssClass="btn btn-primary" OnClick="btnTap_Click" />
+
+            <div class="mt-3">
+                <asp:Label ID="lblMessage" runat="server" CssClass="fw-bold text-success"></asp:Label>
+            </div>
+        </div>
+    </form>
+</body>
+</html>--%>
+
+
+<%--<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Attendance</title>
+    <link href="-https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server" class="container mt-5">
+        <div class="card shadow p-4">
+            <h3 class="mb-3">Meeting Attendance Tapping</h3>
+
+            <!-- Hidden Meeting ID -->
+            <asp:HiddenField ID="hfMeetingID" runat="server" />
+
+            <div class="mb-3">
+                <label class="form-label">Card Serial Number</label>
+                <asp:TextBox ID="txtCardSerial" runat="server" CssClass="form-control" placeholder="Tap/Enter Card Serial No"></asp:TextBox>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Select Tap Type</label><br />
+                <asp:RadioButtonList ID="rblTapType" runat="server" RepeatDirection="Horizontal" CssClass="form-check">
+                    <asp:ListItem Text="Tap In" Value="IN" Selected="True" />
+                    <asp:ListItem Text="Tap Out" Value="OUT" />
+                </asp:RadioButtonList>
+            </div>
+
+            <asp:Button ID="btnTap" runat="server" Text="Submit Tap" CssClass="btn btn-primary" OnClick="btnTap_Click" />
+
+            <div class="mt-3">
+                <asp:Label ID="lblMessage" runat="server" CssClass="fw-bold text-success"></asp:Label>
+            </div>
+        </div>
+    </form>
+</body>
+</html>--%>
+
+
+<!DOCTYPE html>
+<html>
+<head runat="server">
+    <title>Meeting Attendance</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet" />
+</head>
+<body>
+    <form id="form1" runat="server" class="container mt-5">
+        <div class="card shadow p-4">
+            <h3 class="mb-3">Meeting Attendance Tapping</h3>
+
+            <!-- Hidden Meeting ID -->
+            <asp:HiddenField ID="hfMeetingID" runat="server" />
+
+            <div class="mb-3">
+                <label class="form-label">Card Serial Number</label>
+                <asp:TextBox ID="txtCardSerial" runat="server" CssClass="form-control" placeholder="Tap/Enter Card Serial No"></asp:TextBox>
+            </div>
+
+            <div class="mb-3">
+                <label class="form-label">Select Tap Type</label><br />
+                <asp:RadioButtonList ID="rblTapType" runat="server" RepeatDirection="Horizontal" CssClass="form-check">
+                    <asp:ListItem Text="Tap In" Value="IN" Selected="True" />
+                    <asp:ListItem Text="Tap Out" Value="OUT" />
+                </asp:RadioButtonList>
+            </div>
+
+            <asp:Button ID="btnTap" runat="server" Text="Submit Tap" CssClass="btn btn-primary" OnClick="btnTap_Click" />
+            <!-- End Meeting Button -->
+            <div class="mt-4">
+                <asp:Button ID="btnEndMeeting" runat="server" Text="End Meeting" 
+                    CssClass="btn btn-danger" OnClick="btnEndMeeting_Click" />
+            </div>
+
+            <%--<div class="mt-3">
+                <asp:Label ID="lblMessage" runat="server" CssClass="fw-bold text-success"></asp:Label>
+            </div>--%>
+            <%--<div class="mt-3">
+                <asp:Panel ID="pnlAlert" runat="server" Visible="false" CssClass="alert" role="alert">
+                    <asp:Label ID="lblMessage" runat="server"></asp:Label>
+                </asp:Panel>
+            </div>--%>
+            <div class="mt-3">
+                <asp:Panel ID="pnlAlert" runat="server" Visible="false" CssClass="alert alert-dismissible fade show" role="alert">
+                    <asp:Label ID="lblMessage" runat="server"></asp:Label>
+                    <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+                </asp:Panel>
+            </div>
+
+<!-- Script for auto fade out -->
+<script type="text/javascript">
+    function fadeOutAlert() {
+        var alertBox = document.getElementById('<%= pnlAlert.ClientID %>');
+        if (alertBox) {
+            setTimeout(function () {
+                alertBox.classList.add("fade");
+                alertBox.classList.remove("show");
+                setTimeout(function () {
+                    alertBox.style.display = "none";
+                }, 500); // wait for fade animation
+            }, 3000); // alert visible for 3 sec
+        }
+    }
+</script>
+
+
+        </div>
+
+        <!-- Attendance List -->
+        <div class="card shadow p-4 mt-4">
+            <h4 class="mb-3">Attendance List</h4>
+            <asp:GridView ID="gvAttendance" runat="server" CssClass="table table-bordered table-striped"
+                AutoGenerateColumns="False">
+                <Columns>
+                    <asp:BoundField DataField="EmployeeNo" HeaderText="Employee No" />
+                    <asp:BoundField DataField="firstname" HeaderText="First Name" />
+                    <asp:BoundField DataField="middlename" HeaderText="Middle Name" />
+                    <asp:BoundField DataField="lastname" HeaderText="Last Name" />
+                    <asp:BoundField DataField="grade" HeaderText="Grade" />
+                    <asp:BoundField DataField="divisionname" HeaderText="Division" />
+                    <asp:BoundField DataField="departmentname" HeaderText="Department" />
+                    <asp:BoundField DataField="sectionname" HeaderText="Section" />
+                    <asp:BoundField DataField="timein" HeaderText="Time In" DataFormatString="{0:MM/dd/yyyy HH:mm}" />
+                    <asp:BoundField DataField="timeout" HeaderText="Time Out" DataFormatString="{0:MM/dd/yyyy HH:mm}" />
+                </Columns>
+            </asp:GridView>
+        </div>
+    </form>
+</body>
+</html>
+
+---
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace WebApplication1_MAL
+{
+    public partial class meetingattendance : System.Web.UI.Page
+    {
+        //        string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        //        protected void Page_Load(object sender, EventArgs e)
+        //        {
+        //            if (!IsPostBack)
+        //            {
+        //                // Example: Meeting ID from QueryString
+        //                if (!string.IsNullOrEmpty(Request.QueryString["meetingid"]))
+        //                {
+        //                    hfMeetingID.Value = Request.QueryString["meetingid"];
+        //                }
+        //                else
+        //                {
+        //                    lblMessage.Text = "No Meeting ID found!";
+        //                    lblMessage.CssClass = "text-danger";
+        //                }
+        //            }
+        //        }
+
+        //        protected void btnTap_Click(object sender, EventArgs e)
+        //        {
+        //            if (string.IsNullOrEmpty(hfMeetingID.Value) || string.IsNullOrEmpty(txtCardSerial.Text))
+        //            {
+        //                lblMessage.Text = "Meeting ID or Card Serial missing!";
+        //                lblMessage.CssClass = "text-danger";
+        //                return;
+        //            }
+
+        //            using (SqlConnection con = new SqlConnection(connStr))
+        //            {
+        //                SqlCommand cmd = new SqlCommand("TapAttendance", con);
+        //                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+        //                cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+        //                cmd.Parameters.AddWithValue("@cardserialno", txtCardSerial.Text);
+
+        //                con.Open();
+        //                var result = cmd.ExecuteScalar(); // Gets the SELECT message from SP
+        //                lblMessage.Text = result != null ? result.ToString() : "No response from server.";
+        //            }
+
+        //            txtCardSerial.Text = "";
+        //        }
+        //    }
+        //}
+
+        ////        string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        ////        protected void Page_Load(object sender, EventArgs e)
+        ////        {
+        ////            if (!IsPostBack)
+        ////            {
+        ////                if (!string.IsNullOrEmpty(Request.QueryString["meetingid"]))
+        ////                {
+        ////                    hfMeetingID.Value = Request.QueryString["meetingid"];
+        ////                }
+        ////                else
+        ////                {
+        ////                    lblMessage.Text = "No Meeting ID found!";
+        ////                    lblMessage.CssClass = "text-danger";
+        ////                }
+        ////            }
+        ////        }
+
+        ////        protected void btnTap_Click(object sender, EventArgs e)
+        ////        {
+        ////            if (string.IsNullOrEmpty(hfMeetingID.Value) || string.IsNullOrEmpty(txtCardSerial.Text))
+        ////            {
+        ////                lblMessage.Text = "Meeting ID or Card Serial missing!";
+        ////                lblMessage.CssClass = "text-danger";
+        ////                return;
+        ////            }
+
+        ////            using (SqlConnection con = new SqlConnection(connStr))
+        ////            {
+        ////                SqlCommand cmd = new SqlCommand("TapAttendance1", con);
+        ////                cmd.CommandType = System.Data.CommandType.StoredProcedure;
+
+        ////                cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+        ////                cmd.Parameters.AddWithValue("@cardserialno", txtCardSerial.Text);
+        ////                cmd.Parameters.AddWithValue("@tapType", rblTapType.SelectedValue);
+
+        ////                con.Open();
+        ////                var result = cmd.ExecuteScalar();
+        ////                lblMessage.Text = result != null ? result.ToString() : "No response from server.";
+        ////            }
+
+        ////            txtCardSerial.Text = "";
+        ////        }
+        ////    }
+        ////}
+
+        string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+
+        protected void Page_Load(object sender, EventArgs e)
+        {
+            if (!IsPostBack)
+            {
+                if (!string.IsNullOrEmpty(Request.QueryString["meetingid"]))
+                {
+                    hfMeetingID.Value = Request.QueryString["meetingid"];
+                    LoadAttendance();
+                }
+                else
+                {
+                    lblMessage.Text = "No Meeting ID found!";
+                    lblMessage.CssClass = "text-danger";
+                }
+            }
+        }
+
+        //protected void btnTap_Click(object sender, EventArgs e)
+        //{
+        //    if (string.IsNullOrEmpty(hfMeetingID.Value) || string.IsNullOrEmpty(txtCardSerial.Text))
+        //    {
+        //        lblMessage.Text = "Meeting ID or Card Serial missing!";
+        //        lblMessage.CssClass = "text-danger";
+        //        return;
+        //    }
+
+        //    using (SqlConnection con = new SqlConnection(connStr))
+        //    {
+        //        SqlCommand cmd = new SqlCommand("TapAttendance1", con);
+        //        cmd.CommandType = CommandType.StoredProcedure;
+
+        //        cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+        //        cmd.Parameters.AddWithValue("@cardserialno", txtCardSerial.Text);
+        //        cmd.Parameters.AddWithValue("@tapType", rblTapType.SelectedValue);
+
+        //        con.Open();
+        //        var result = cmd.ExecuteScalar();
+        //        lblMessage.Text = result != null ? result.ToString() : "No response from server.";
+        //    }
+
+        //    txtCardSerial.Text = "";
+
+        //    // Refresh attendance list
+        //    LoadAttendance();
+        //}
+
+        protected void btnTap_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(hfMeetingID.Value) || string.IsNullOrEmpty(txtCardSerial.Text))
+            {
+                ShowAlert("Meeting ID or Card Serial missing!", "danger");
+                return;
+            }
+
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                SqlCommand cmd = new SqlCommand("TapAttendance1", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+
+                cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+                cmd.Parameters.AddWithValue("@cardserialno", txtCardSerial.Text);
+                cmd.Parameters.AddWithValue("@tapType", rblTapType.SelectedValue);
+
+                con.Open();
+                var result = cmd.ExecuteScalar();
+                string message = result != null ? result.ToString() : "No response from server.";
+
+                // Decide alert color
+                if (message.Contains("successfully"))
+                    ShowAlert(message, "success"); // green
+                else
+                    ShowAlert(message, "warning"); // yellow/orange
+            }
+
+            txtCardSerial.Text = "";
+            LoadAttendance();
+        }
+
+        //private void ShowAlert(string message, string type)
+        //{
+        //    pnlAlert.Visible = true;
+        //    lblMessage.Text = message;
+        //    pnlAlert.CssClass = "alert alert-" + type; // ex: alert-success, alert-warning, alert-danger
+        //}
+
+        private void ShowAlert(string message, string type)
+        {
+            pnlAlert.Visible = true;
+            lblMessage.Text = message;
+            pnlAlert.CssClass = "alert alert-" + type + " alert-dismissible fade show";
+
+            // trigger fadeOutAlert after rendering
+            ScriptManager.RegisterStartupScript(this, this.GetType(), "fadeAlert", "fadeOutAlert();", true);
+        }
+
+
+        private void LoadAttendance()
+        {
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                SqlCommand cmd = new SqlCommand("GetAttendanceList", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+
+                SqlDataAdapter da = new SqlDataAdapter(cmd);
+                DataTable dt = new DataTable();
+                da.Fill(dt);
+
+                gvAttendance.DataSource = dt;
+                gvAttendance.DataBind();
+            }
+        }
+
+
+        protected void btnEndMeeting_Click(object sender, EventArgs e)
+        {
+            if (string.IsNullOrEmpty(hfMeetingID.Value))
+            {
+                ShowAlert("No Meeting ID found!", "danger");
+                return;
+            }
+
+            using (SqlConnection con = new SqlConnection(connStr))
+            {
+                SqlCommand cmd = new SqlCommand("EndMeeting", con);
+                cmd.CommandType = CommandType.StoredProcedure;
+                cmd.Parameters.AddWithValue("@meetingid", hfMeetingID.Value);
+
+                con.Open();
+                var result = cmd.ExecuteScalar();
+                string message = result != null ? result.ToString() : "Meeting update failed.";
+
+                ShowAlert(message, message.Contains("Completed") ? "success" : "danger");
+            }
+
+            // Optionally disable buttons after ending
+            btnTap.Enabled = false;
+            btnEndMeeting.Enabled = false;
+        }
+
+
+    }
+}
+
+---
+
+
