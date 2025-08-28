@@ -57,3 +57,77 @@
     </form>
 </body>
 </html>
+
+---
+
+using System;
+using System.Collections.Generic;
+using System.Configuration;
+using System.Data;
+using System.Data.SqlClient;
+using System.Linq;
+using System.Web;
+using System.Web.UI;
+using System.Web.UI.WebControls;
+
+namespace WebApplication1_MAL
+{
+//    public partial class CreateMeeting : System.Web.UI.Page
+//    {
+//        protected void Page_Load(object sender, EventArgs e)
+//        {
+
+//        }
+//    }
+//}
+
+
+//using System;
+//using System.Data;
+//using System.Data.SqlClient;
+//using System.Configuration;
+
+//namespace YourNamespace
+//{
+    public partial class CreateMeeting : System.Web.UI.Page
+    {
+        protected void Page_Load(object sender, EventArgs e) { }
+
+        protected void btnSave_Click(object sender, EventArgs e)
+        {
+            string connStr = ConfigurationManager.ConnectionStrings["MeetingDb"].ConnectionString;
+            string meetingId = "";
+            string currentUser = Session["Username"].ToString();
+
+            using (SqlConnection conn = new SqlConnection(connStr))
+            {
+                using (SqlCommand cmd = new SqlCommand("InsertMeeting1", conn))
+                {
+                    cmd.CommandType = CommandType.StoredProcedure;
+
+                    cmd.Parameters.AddWithValue("@Title", txtTitle.Text);
+                    cmd.Parameters.AddWithValue("@StartDate", Convert.ToDateTime(txtStartDateTime.Text));
+                    cmd.Parameters.AddWithValue("@EndDate", Convert.ToDateTime(txtEndDateTime.Text));
+                    cmd.Parameters.AddWithValue("@Venue", txtVenue.Text);
+                    cmd.Parameters.AddWithValue("@Organizer", txtOrganizer.Text);
+                    //cmd.Parameters.AddWithValue("@Remarks", "Remarks");
+                    cmd.Parameters.AddWithValue("@CreatedBy", currentUser);
+
+                    SqlParameter outputParam = new SqlParameter("@MeetingId", SqlDbType.NVarChar, 50)
+                    {
+                        Direction = ParameterDirection.Output
+                    };
+                    cmd.Parameters.Add(outputParam);
+
+                    conn.Open();
+                    cmd.ExecuteNonQuery();
+                    conn.Close();
+
+                    meetingId = outputParam.Value.ToString();
+
+                    lblResult.Text = $"Meeting saved successfully!<br/>Meeting ID: <strong>{meetingId}</strong>";
+                }
+            }
+        }
+    }
+}
